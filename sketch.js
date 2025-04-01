@@ -7,33 +7,37 @@ let asteroidCount = 5;
 let asteroids = [];
 let bullets = [];
 let gameOver = false;
+let startGameButton;
 let playAgainButton;
 let winGame = false;
 let score = 0;
 let highScore = localStorage.getItem(highScoreID) ? parseInt(localStorage.getItem(highScoreID)) : 0;
 let stars = [];
-let numStars = 100;
+let numStars = 500;
 
 function preload() {  
   console.log("Preload");  
   loadSounds();
 }
 
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+  positionGameButton(startGameButton);  
+  positionGameButton(playAgainButton);
+  createStars();
+}
+
 function setup() {
   
-  createCanvas(800, 600);
+  createCanvas(windowWidth, windowHeight);
   
   // If sound gets crashy - turn it off with this...
   //getAudioContext().suspend(); // Suspend audio context
   
-  startRandomUFO();
-  
-  ship = new Ship();
-  ufo = null;
-  createAsteroids();
   createPlayAgainButton();
-  createResetHighScoreButton();
-  createStars();
+  createResetHighScoreButton();  
+  createStartGameButton(); 
+  
 }
 
 function draw() {
@@ -52,14 +56,6 @@ function draw() {
 
 
 function resetGame() {
-  // Call loadSounds and pass in a callback that will run once all sounds are loaded
-  loadSounds(() => {
-    console.log("Game reset and sounds are ready!");
-    restartGame();
-  });  
-}
-
-function restartGame() {
   
   score = 0;
   
@@ -68,7 +64,7 @@ function restartGame() {
 
   // Clear bullets, UFO bullets, and asteroids
   asteroids = [];
-  bullets = [];
+  bullets = [];  
   
   // Clear UFO bullets and stop sounds
   if (ufo) {
@@ -81,14 +77,37 @@ function restartGame() {
   }
 
   // Clear UFO intervals
-  stopUFOs();
+  stopUFOs();  
+  
+  // Call loadSounds and pass in a callback that will run once all sounds are loaded
+  loadSounds(() => {
+    console.log("Game reset and sounds are ready!");
+    startGame();
+  });  
+}
 
+function startGame() {
+  
+  if(startGameButton) {
+    startGameButton.hide();
+  }
+  startRandomUFO();
+  
   ship = new Ship();
+  ufo = null;
+
+  createStars();  
+  
+  if (soundsLoaded.gameplaySound) {
+    gamePlaySoundLoaded();
+  }
+  
   createAsteroids();
   playAgainButton.hide();
   resetHighScoreButton.hide();
   loop();
   startRandomUFO();
+  
 }
 
 function keyPressed() {
@@ -142,13 +161,28 @@ function createAsteroids() {
   }
 }
 
+function createStartGameButton() {
+  startGameButton = createButton('Start Game');
+  startGameButton.size(200, 50);
+  startGameButton.style('font-size', '24px');
+  startGameButton.mousePressed(startGame);
+  positionGameButton(startGameButton);
+  startGameButton.show();
+}
+
 function createPlayAgainButton() {
   playAgainButton = createButton('Play Again');
   playAgainButton.size(200, 50);
   playAgainButton.style('font-size', '24px');
   playAgainButton.mousePressed(resetGame);
-  playAgainButton.position(width / 2 - playAgainButton.width / 2, height / 2 + 30);
+  positionGameButton(playAgainButton);
   playAgainButton.hide();
+}
+
+function positionGameButton(button) {
+  if(button) {
+       button.position(width / 2 - button.width / 2, height / 2 + 30);
+  }
 }
 
 function createResetHighScoreButton() {
@@ -419,6 +453,7 @@ function resetHighScore() {
 }
 
 function createStars() {
+  stars = [];
   for (let i = 0; i < numStars; i++) {
     stars.push(new Star());
   }    
