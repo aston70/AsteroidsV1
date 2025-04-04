@@ -51,11 +51,6 @@ function loadSounds(callback) {
         if (callback) {
           callback();
         }
-
-        // If gameplaySound is loaded, call gamePlaySoundLoaded()
-        if (soundsLoaded.gameplaySound) {
-          gamePlaySoundLoaded();
-        }
       }
     }, soundLoadError);
   });
@@ -124,14 +119,17 @@ function unloadSounds(callback) {
 }
 
 function playSound(sound, loop = false) {
+  
+  if (pauseGame) {
+    return;
+  }  
+  
   try {
     if (audioContext && sound && !sound.isPlaying()) {
       if (loop) {
         sound.loop();  // Make sure loop() is called as a function
       } else {
         sound.play();
-          console.log(sound);
-          console.log("played");
       }
     }
   } catch (ex) {
@@ -143,8 +141,6 @@ function stopSound(sound) {
   try {
     if (sound && sound.isPlaying()) {
       sound.stop();
-      console.log(sound);
-      console.log("stopped");
     }
   } catch (ex) {
     console.log(ex);
