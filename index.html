@@ -1,16 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+  
+  <head>    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asteroids Version 1: Team 12, COSC559</title>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.1/p5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.1/addons/p5.sound.min.js"></script>
     <link rel="stylesheet" type="text/css" href="style.css">
     <meta charset="utf-8" />
-
+    
+    <script src="help.js"></script>
   </head>
+  
   <body>
     <main>
+      <button onclick="showHelp()">Show Help</button>
     </main>
-<!--     <audio id="background-music" src="sounds/game-play.wav" autoplay loop muted></audio> -->
     <script src="objects/ship.js"></script>      <!-- Ship class -->
     <script src="objects/ufo.js"></script>       <!-- UFO class -->
     <script src="objects/bullet.js"></script>    <!-- Bullet class -->
@@ -20,14 +27,74 @@
     
     <!-- Main game logic -->
     <script src="sketch.js"></script>
+
     
-<!--   <script>
-    // Unmute background music on first interaction
-    document.addEventListener("click", () => {
-      const bgMusic = document.getElementById("background-music");
-      bgMusic.muted = false;  // Unmute the music
-    }, { once: true });  // Trigger only once
-  </script>     -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <h1>Asteroids Game Help Guide</h1>
+            <div id="section1">
+                <h2>Objective</h2>
+                <p>Your mission is to destroy all asteroids while avoiding collisions and enemy fire. Large asteroids break into smaller ones until they are completely eliminated. A UFO may appear and attack you with burst fire, adding to the challenge.</p>
+            </div>
+
+            <div id="section2" style="display:none;">
+                <h2>Controls</h2>
+                <h3>Movement</h3>
+                <div class="keys">
+                    <ul>
+                        <li><span class="key">↑</span><span>Thrust forward</span></li>
+                        <li><span class="key">←</span><span>Rotate left</span></li>
+                        <li><span class="key">→</span><span>Rotate right</span></li>
+                    </ul>
+                </div>
+                <h3>Shooting</h3>
+                <div class="keys">
+                    <ul>
+                        <li>
+                            <span class="key">Space</span>
+                            <span>Fire bullets to destroy asteroids and the UFO</span>
+                        </li>
+                    </ul>    
+                </div>
+            </div>
+
+            <div id="section3" style="display:none;">
+                <h2>Scoring</h2>
+                <ul>
+                    <li>Destroying large asteroids: <strong>100 points</strong></li>
+                    <li>Destroying medium asteroids: <strong>50 points</strong></li>
+                    <li>Destroying small asteroids: <strong>25 points</strong></li>
+                    <li>Destroying UFO: <strong>500 points</strong></li>
+                    <li>Surviving a UFO attack: <strong>20 points based on evasion</strong></li>
+                </ul>
+            </div>
+
+            <div id="section4" style="display:none;">
+                <h2>Dangers & Health</h2>
+                <ul>
+                    <li><strong>Colliding with an asteroid</strong>: Instant game over</li>
+                    <li><strong>UFO bursts</strong>: Each hit deals <strong>10% health damage</strong></li>
+                    <li><strong>Direct UFO hit</strong>: <strong>50% health damage</strong></li>
+                    <li><strong>Game over</strong> when health reaches <strong>0%</strong></li>
+                </ul>
+            </div>
+
+            <div id="section5" style="display:none;">
+                <h2>Tips for Survival</h2>
+                <ul>
+                    <li>Stay mobile! Constant movement helps avoid asteroids and UFO attacks.</li>
+                    <li>Use controlled thrusts to maneuver strategically.</li>
+                    <li>Take out larger asteroids early to control debris.</li>
+                    <li>When a UFO appears, focus on dodging first, then attack.</li>
+                </ul>
+            
+              <p><strong>Good luck, pilot!</strong></p>              
+            </div>
+          
+            <button id="modalButton" onclick="nextSection()">Next</button>
+        </div>
+    </div>
+
     
   </body>
 </html>

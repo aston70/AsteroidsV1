@@ -1,4 +1,5 @@
 const highScoreID = "highScorev1";
+let pauseGame = true;
 let ship;
 let ufo;
 let ufoInterval;
@@ -14,22 +15,38 @@ let score = 0;
 let highScore = localStorage.getItem(highScoreID) ? parseInt(localStorage.getItem(highScoreID)) : 0;
 let stars = [];
 let numStars = 500;
+const resetHighscorePosition = { widthOffset: 170, y: 65 };
 
 function preload() {  
   console.log("Preload");  
   loadSounds();
 }
 
+function getCanvasSize() {  
+  return { x: windowWidth, y: windowHeight - 40 };
+}
+
 function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
-  positionGameButton(startGameButton);  
-  positionGameButton(playAgainButton);
+  let canvaseSize = getCanvasSize();
+  resizeCanvas(canvaseSize.x, canvaseSize.y);
+  
+  if (startGameButton) {
+    positionGameButton(startGameButton, height / 2 + 20);
+  }
+  if (playAgainButton) {
+    positionGameButton(playAgainButton, height / 2 + 70);
+  }
+  if (resetHighScoreButton) {
+    resetHighScoreButton.position(
+      width - resetHighscorePosition.widthOffset, resetHighscorePosition.y);
+  }
   createStars();
 }
 
 function setup() {
   
-  createCanvas(windowWidth, windowHeight);
+  let canvaseSize = getCanvasSize();
+  createCanvas(canvaseSize.x, canvaseSize.y);
   
   // If sound gets crashy - turn it off with this...
   //getAudioContext().suspend(); // Suspend audio context
@@ -41,7 +58,12 @@ function setup() {
 }
 
 function draw() {
-    
+      
+  if (pauseGame) { 
+    stopUFOs();
+    return;
+  }
+  
   background(0);
 
   if (gameOver) {
@@ -51,7 +73,7 @@ function draw() {
   }
 
   displayScore();
-  
+  displayHealth();
 }
 
 
@@ -88,6 +110,8 @@ function resetGame() {
 
 function startGame() {
   
+  pauseGame = false;
+  
   if(startGameButton) {
     startGameButton.hide();
   }
@@ -123,8 +147,10 @@ function keyPressed() {
     ship.setRotation(-0.1);
   }
   else if (keyCode === UP_ARROW) {
-    ship.boosting(true);
-    playSound(thrustSound, true);
+    if(ship && !ship.isBoosting) {
+      ship.boosting(true);
+      playSound(thrustSound, true);
+    }
   } 
   else if (key === ' ') {
     fireBullet();
@@ -166,7 +192,7 @@ function createStartGameButton() {
   startGameButton.size(200, 50);
   startGameButton.style('font-size', '24px');
   startGameButton.mousePressed(startGame);
-  positionGameButton(startGameButton);
+  positionGameButton(startGameButton, height / 2 + 20);
   startGameButton.show();
 }
 
@@ -175,23 +201,24 @@ function createPlayAgainButton() {
   playAgainButton.size(200, 50);
   playAgainButton.style('font-size', '24px');
   playAgainButton.mousePressed(resetGame);
-  positionGameButton(playAgainButton);
+  positionGameButton(playAgainButton, height / 2 + 50);
   playAgainButton.hide();
 }
 
-function positionGameButton(button) {
+function positionGameButton(button, y) {
   if(button) {
-       button.position(width / 2 - button.width / 2, height / 2 + 30);
+       button.position(width / 2 - button.width / 2, y);
   }
 }
 
 function createResetHighScoreButton() {
   // Create the reset button once
-  resetHighScoreButton = createButton('Reset');
-  resetHighScoreButton.size(80, 30);   // Smaller size
+  resetHighScoreButton = createButton('Reset High Score');
+  resetHighScoreButton.size(150, 30);   // Smaller size
   resetHighScoreButton.style('font-size', '14px');
   resetHighScoreButton.mousePressed(resetHighScore);
   resetHighScoreButton.hide();
+  resetHighScoreButton.position(width - resetHighscorePosition.widthOffset, resetHighscorePosition.y);
 }
 
 function displayGameOver() {
@@ -297,19 +324,17 @@ function handleBullets() {
   }
 }
 
-function checkBulletCollisions(i) 
-{
-  
+function checkBulletCollisions(i) {
   // First, check for collision between bullet and UFO
   if (ufo && bullets[i].hits(ufo)) {
     console.log("Bullet hit UFO");
     if (!ufoHitSound.isPlaying()) {
       ufoHitSound.play();
     }
-    
+
     // Award points for destroying UFO
-    score += 500;
-    
+    incrementScore(500);
+
     bullets.splice(i, 1); // Remove the bullet
     ufo.destroy(); // Destroy the UFO
     ufo = null; // Remove the reference to the UFO
@@ -347,7 +372,8 @@ function handleAsteroids() {
     a.show();
     
     if (ship.hits(a)) {
-      playSound(spaceshipHitSound);   
+      playSound(spaceshipHitSound);
+      ship.health = 0;
       gameOver = true;
     }
     
@@ -356,6 +382,12 @@ function handleAsteroids() {
 
 // Function to start the random UFO spawning
 function startRandomUFO() {
+  
+  if(pauseGame) {
+    stopUFOs();
+    return;
+  }
+  
   console.log("Random UFO...");
 
   // Don't start spawning if the game is over
@@ -407,6 +439,7 @@ function spawnUFO() {
       clearInterval(ufoMoveInterval);  // Stop movement
       ufo.remove();  // Remove UFO from the screen
       ufo = null;  // Reset ufo to null once the UFO is removed
+      incrementScore(20);
     }
   }, 20); // Move UFO every 20ms (smooth movement)
 }
@@ -430,9 +463,34 @@ function displayScore() {
   // Display high score
   textAlign(RIGHT);
   text(`High Score: ${highScore}`, width - 20, 30);
+
+}
+
+function displayHealth() {
   
-  // Position the reset button below the high score
-  resetHighScoreButton.position(width - 110, 40); 
+  if(!ship){
+    return;
+  }
+  
+  let health = constrain(ship.health, 0, 100);
+  
+  fill(255);
+  textSize(20);
+  textAlign(LEFT);
+  text(`Health: ${health}`, 20, 60);
+
+  // Calculate the health bar color from green to red based on the health value
+  let healthColor = lerpColor(color(0, 255, 0), color(255, 0, 0), 1 - (health / 100));
+
+  // Draw the health bar
+  noStroke();
+  fill(healthColor); // Set fill color based on health
+  rect(20, 80, 200 * (health / 100), 20); // Health bar width corresponds to health percentage
+
+  // Optionally, you can add a border around the health bar
+  stroke(255); // White border
+  noFill();
+  rect(20, 80, 200, 20); // Draw border around the health bar
 }
 
 // After the game ends, compare score with highScore. Update highScore
@@ -457,4 +515,9 @@ function createStars() {
   for (let i = 0; i < numStars; i++) {
     stars.push(new Star());
   }    
+}
+
+function incrementScore(amount) {
+  score += amount;
+  displayScore();
 }
