@@ -35,9 +35,7 @@ function showHelp() {
 }
 
 function nextSection() {
-  
-  console.log(currentSection);
-  
+    
   // Hide the current section
   getSection(currentSection).style.display = 'none';
 
